@@ -1,0 +1,2 @@
+# Deep-Feature-Extraction-and-Explainable-Classification-of-Dried-Blood-Droplet-Images
+This project focuses on analyzing dried blood drop patterns using AI-based image analysis. As blood dries, variations in internal constituents create unique morphological patterns. By capturing images of these dried blood samples and applying machine learning/deep learning techniques, the system learns discriminative features that correlate .
