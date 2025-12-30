@@ -1,151 +1,119 @@
-Liver Biopsy Image Classification (Research Only)
-Overview
+# Liver Biopsy Image Classification (Research)
 
-This project implements a research-oriented machine learning pipeline for liver biopsy image classification using handcrafted and deep features with classical ML models.
-The goal is to study feature separability, model behavior, and explainability, not clinical deployment.
+## Description
+Deep learning–based classification of liver biopsy images into five pathological classes.
+Research-only implementation.
 
-⚠️ Not intended for clinical or diagnostic use.
+Classes: Healthy | Inflammation | Steatosis | Ballooning | Fibrosis
 
-Problem Statement
+---
 
-Histopathological liver biopsy images show visual patterns that correlate with conditions such as:
+## Environment
+Python >= 3.9
 
-Healthy tissue
+pip install torch torchvision timm numpy pandas matplotlib scikit-learn grad-cam
 
-Inflammation
+---
 
-Steatosis
-
-Ballooning
-
-Fibrosis
-
-Manual assessment is subjective and time-consuming. This project explores whether feature-based ML models can learn discriminative patterns from biopsy images in a controlled research setting.
-
-Dataset Structure
-
-The dataset is expected to be organized as:
-
-Liver Biopsies/
+## Dataset Structure
+Liver_Biopsies/
 ├── Healthy/
 ├── Inflammation/
 ├── Steatosis/
 ├── Ballooning/
 └── Fibrosis/
 
+---
 
-Each folder contains biopsy images belonging to one class.
+## Notebook
+Untitled11.ipynb
 
-Dataset is accessed via Google Drive (Colab environment).
+---
 
-Methodology
-1. Data Loading
+## Dataset Loading
+from torchvision import datasets, transforms
 
-Images are loaded class-wise from Google Drive
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor()
+])
 
-Labels are inferred from folder names
+dataset = datasets.ImageFolder(root=dataset_path, transform=transform)
 
-Stratified splits are used to preserve class balance
+---
 
-2. Feature Extraction
+## Model
+import timm
+import torch.nn as nn
 
-The pipeline works on pre-extracted numerical features, including:
+model = timm.create_model(
+    "regnety_016",
+    pretrained=True,
+    num_classes=5
+)
 
-Deep CNN feature vectors (e.g., DenseNet embeddings)
+---
 
-Flattened high-dimensional representations
+## Training
+import torch
 
-These features are treated as fixed descriptors (no end-to-end CNN training).
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-3. Model Training
+for epoch in range(num_epochs):
+    model.train()
+    for images, labels in train_loader:
+        optimizer.zero_grad()
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
 
-A Random Forest classifier is used as the primary model:
+---
 
-Handles high-dimensional features well
+## Evaluation
+from sklearn.metrics import classification_report
 
-Robust to overfitting
+model.eval()
+y_true, y_pred = [], []
 
-Interpretable via feature importance
+with torch.no_grad():
+    for images, labels in val_loader:
+        outputs = model(images)
+        preds = outputs.argmax(dim=1)
+        y_true.extend(labels.cpu().numpy())
+        y_pred.extend(preds.cpu().numpy())
 
-Training uses Stratified K-Fold Cross Validation.
+print(classification_report(y_true, y_pred))
 
-4. Evaluation Metrics
+---
 
-Training vs testing accuracy
+## Explainability (Grad-CAM)
+from grad_cam import GradCAM
 
-Confusion matrix
+cam = GradCAM(model=model, target_layer="blocks.3")
+heatmap = cam(input_tensor, target_class)
 
-Class-wise performance visualization
+---
 
-Misclassification analysis
+## Outputs
+outputs/
+├── trained_model.pth
+├── confusion_matrix.png
+├── gradcam_samples/
+└── metrics.json
 
-5. Explainability & Analysis
+---
 
-To understand model behavior, the notebook includes:
+## License
+Apache License 2.0
 
-Feature importance ranking (Random Forest)
+---
 
-t-SNE visualization for feature space separability
+## Disclaimer
+For research and educational use only. Not for clinical use.
 
-SHAP analysis for local and global explanations
+---
 
-Visualization of misclassified samples
-
-Visual Outputs
-
-The notebook generates:
-
-Accuracy trends across folds
-
-Confusion matrices
-
-Feature importance bar plots
-
-2D t-SNE embeddings
-
-SHAP summary plots
-
-These outputs are meant for analysis and interpretation, not reporting clinical performance.
-
-Environment
-
-Designed for Google Colab
-
-Key Libraries
-
-Python 3
-
-NumPy, Pandas
-
-scikit-learn
-
-Matplotlib
-
-SHAP
-
-OpenCV / PIL (image handling)
-
-Google Colab Drive API
-
-How to Run
-
-Open the notebook in Google Colab
-
-Mount Google Drive when prompted
-
-Update dataset path if needed
-
-Run cells sequentially
-
-No training configuration is hard-coded for production use.
-
-Research Scope
-
-✔ Method comparison
-✔ Feature space analysis
-✔ Model explainability
-✔ Educational and experimental use
-
-❌ Clinical decision support
-❌ Real-world diagnosis
-❌ Regulatory compliance
+## Author
+Kethan — Biomedical AI / Medical Imaging Research
