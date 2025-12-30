@@ -1,119 +1,74 @@
-# Liver Biopsy Image Classification (Research)
+# Explainable Hybrid Deep Feature Learning for Subject Identification from Dried Blood Droplet Images
 
-## Description
-Deep learning–based classification of liver biopsy images into five pathological classes.
-Research-only implementation.
+Research-only project implementing a hybrid deep–classical ML framework to identify subject-specific visual signatures from dried blood droplet (DBD) images using explainable AI.
 
-Classes: Healthy | Inflammation | Steatosis | Ballooning | Fibrosis
+Dataset: Figshare (Hamadeh et al., 2019) | 1710 images | 30 healthy subjects  
+Acquisition: controlled drying on glass slides, CASIO EX-Z1000 HDR macro, ~100 px/mm, single droplet per image.
 
----
+Environment:
+Python >= 3.9  
+pip install torch torchvision timm scikit-learn shap grad-cam matplotlib numpy
 
-## Environment
-Python >= 3.9
+Data Layout:
+DBD_Dataset/subject_01 … subject_30 (images)
 
-pip install torch torchvision timm numpy pandas matplotlib scikit-learn grad-cam
+Preprocessing:
+- Resize 224×224
+- ImageNet normalization
+- No histogram equalization
+- No augmentation
+- 5-fold stratified cross-validation
 
----
+Feature Extraction (Frozen Backbone):
+import timm  
+backbone = timm.create_model("densenet201", pretrained=True, num_classes=0)  
+Global Average Pooling → 1920-D feature vector
 
-## Dataset Structure
-Liver_Biopsies/
-├── Healthy/
-├── Inflammation/
-├── Steatosis/
-├── Ballooning/
-└── Fibrosis/
+Classifier:
+from sklearn.ensemble import RandomForestClassifier  
+clf = RandomForestClassifier(n_estimators=300, class_weight="balanced", bootstrap=True, random_state=42)
 
----
+Training:
+- Extract deep features per image
+- Train RF on features
+- Evaluate per fold, aggregate results
 
-## Notebook
-Untitled11.ipynb
+Evaluation:
+- Mean accuracy (5-fold CV)
+- Aggregated confusion matrix  
+Performance: DenseNet201 + RF = 82.5% (outperforms softmax and MobileNet variants)
 
----
+Explainability:
+Grad-CAM (spatial relevance): peripheral ring, radial cracks, internal texture  
+from grad_cam import GradCAM  
+cam = GradCAM(model=backbone, target_layer="features.denseblock4")
 
-## Dataset Loading
-from torchvision import datasets, transforms
+SHAP (feature importance): compact subset of deep features dominates decisions  
+import shap  
+explainer = shap.TreeExplainer(clf)
 
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor()
-])
+Outputs:
+outputs/confusion_matrix.png  
+outputs/gradcam_visualizations/  
+outputs/shap_feature_importance.png  
+outputs/metrics.json
 
-dataset = datasets.ImageFolder(root=dataset_path, transform=transform)
+Findings:
+- DBD morphology encodes stable subject-level information
+- Hybrid deep features + RF improves robustness
+- XAI aligns with known physical drying phenomena
 
----
+Limitations:
+- Controlled acquisition only
+- Healthy subjects only
+- Identification, not biometric authentication
 
-## Model
-import timm
-import torch.nn as nn
+Future Work:
+- Larger/diverse cohorts
+- Pathological samples
+- Attention mechanisms
+- Integration with physical/biochemical features
 
-model = timm.create_model(
-    "regnety_016",
-    pretrained=True,
-    num_classes=5
-)
-
----
-
-## Training
-import torch
-
-criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-
-for epoch in range(num_epochs):
-    model.train()
-    for images, labels in train_loader:
-        optimizer.zero_grad()
-        outputs = model(images)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-
----
-
-## Evaluation
-from sklearn.metrics import classification_report
-
-model.eval()
-y_true, y_pred = [], []
-
-with torch.no_grad():
-    for images, labels in val_loader:
-        outputs = model(images)
-        preds = outputs.argmax(dim=1)
-        y_true.extend(labels.cpu().numpy())
-        y_pred.extend(preds.cpu().numpy())
-
-print(classification_report(y_true, y_pred))
-
----
-
-## Explainability (Grad-CAM)
-from grad_cam import GradCAM
-
-cam = GradCAM(model=model, target_layer="blocks.3")
-heatmap = cam(input_tensor, target_class)
-
----
-
-## Outputs
-outputs/
-├── trained_model.pth
-├── confusion_matrix.png
-├── gradcam_samples/
-└── metrics.json
-
----
-
-## License
-Apache License 2.0
-
----
-
-## Disclaimer
-For research and educational use only. Not for clinical use.
-
----
-
-## Author
-Kethan — Biomedical AI / Medical Imaging Research
+License: Apache License 2.0  
+Disclaimer: Research and academic use only; not for clinical or forensic decisions.  
+Author: Kethan — Biomedical AI / Explainable Medical Imaging
