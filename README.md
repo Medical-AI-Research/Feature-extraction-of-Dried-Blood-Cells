@@ -71,4 +71,13 @@ Future Work:
 
 License: Apache License 2.0  
 Disclaimer: Research and academic use only; not for clinical or forensic decisions.  
-Author: Kethan — Biomedical AI / Explainable Medical Imaging
+
+<img width="868" height="367" alt="image" src="https://github.com/user-attachments/assets/5f99ee31-0451-4b77-b6c3-36746775e6a4" />
+
+<img width="619" height="196" alt="image" src="https://github.com/user-attachments/assets/d98c8acc-0fca-41b1-808e-0cc4bc19af31" />
+<img width="734" height="874" alt="image" src="https://github.com/user-attachments/assets/5fc9eb57-cb28-47cd-80ea-02422317189b" />
+<img width="708" height="595" alt="image" src="https://github.com/user-attachments/assets/81b8cee6-c824-4310-b1f3-87ddcd8dc37e" />
+
+
+
+
